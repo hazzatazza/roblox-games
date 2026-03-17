@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joeblox</title>
+    <style>
+        :root {
+            --bg-color: #1b1d1e;
+            --nav-color: #232527;
+            --top-bar: #232527;
+            --card-bg: #2b2d2f;
+            --text-main: #ffffff;
+            --text-secondary: #bdbebe;
+            --search-bg: #111213;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* --- MAIN MENU STYLES --- */
+        header {
+            height: 40px;
+            background-color: var(--top-bar);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 10;
+            border-bottom: 1px solid #333;
+        }
+
+        .search-container { flex-grow: 1; max-width: 600px; margin: 0 50px; }
+        .search-container input {
+            width: 100%; background-color: var(--search-bg); border: 1px solid #444;
+            border-radius: 4px; padding: 5px 10px; color: white; outline: none;
+        }
+
+        .wrapper { display: flex; padding-top: 40px; }
+
+        nav {
+            width: 180px; background-color: var(--nav-color);
+            height: calc(100vh - 40px); padding: 20px 10px; position: fixed;
+        }
+
+        nav a {
+            display: block; color: var(--text-main); text-decoration: none;
+            padding: 10px; border-radius: 5px; margin-bottom: 5px; font-size: 14px;
+        }
+
+        main { margin-left: 200px; padding: 30px; width: calc(100% - 240px); }
+
+        .game-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+            gap: 20px; 
+            padding-bottom: 50px;
+        }
+
+        .game-card { text-decoration: none; color: white; cursor: pointer; transition: transform 0.1s; }
+        .game-card:active { transform: scale(0.95); }
+
+        .thumbnail-container {
+            width: 100%; aspect-ratio: 1 / 1; background-color: var(--card-bg);
+            border-radius: 12px; overflow: hidden; position: relative; border: 1px solid #393b3d;
+        }
+
+        .thumbnail-container img { width: 100%; height: 100%; object-fit: cover; }
+
+        .play-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.3); display: flex; justify-content: center;
+            align-items: center; opacity: 0; transition: opacity 0.2s;
+        }
+
+        .play-icon {
+            width: 0; height: 0; border-top: 20px solid transparent;
+            border-bottom: 20px solid transparent; border-left: 30px solid white; margin-left: 10px;
+        }
+
+        .game-card:hover .play-overlay { opacity: 1; }
+        .game-card:hover img { filter: brightness(0.7); }
+
+        .game-title { font-weight: bold; margin-top: 8px; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .game-stats { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+        /* --- IN-GAME VIEW --- */
+        #game-view {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: black; z-index: 1000;
+        }
+
+        .ingame-logo-btn {
+            position: absolute; top: 10px; left: 10px;
+            width: 35px; height: 35px; background: rgba(0,0,0,0.6);
+            border-radius: 5px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1100; border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .logo-sq {
+            width: 18px; height: 18px; background: white;
+            transform: rotate(-15deg); position: relative;
+        }
+
+        .logo-sq::after {
+            content: ''; position: absolute; width: 6px; height: 6px;
+            background: #222; top: 6px; left: 6px;
+        }
+
+        #esc-menu {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.7);
+            z-index: 1200; justify-content: center; align-items: center;
+        }
+
+        .menu-box {
+            background: #2b2d2f; width: 300px; padding: 30px;
+            border-radius: 10px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .menu-btn {
+            display: block; width: 100%; padding: 15px; margin: 10px 0;
+            border: none; border-radius: 8px; font-size: 16px;
+            font-weight: bold; cursor: pointer; color: white;
+        }
+
+        .reset-btn { background: #555; }
+        .leave-btn { background: #f53d3d; }
+        .resume-btn { background: #00b06f; }
+
+        iframe { width: 100%; height: 100%; border: none; }
+    </style>
+</head>
+<body>
+
+    <div id="main-menu">
+        <header>
+            <div style="font-weight: bold; font-size: 18px; letter-spacing: 1px;">JOEBLOX</div>
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Search experiences...">
+            </div>
+        </header>
+
+        <div class="wrapper">
+            <nav>
+                <a href="#" style="background: rgba(255,255,255,0.1)">Home</a>
+                <a href="#">Profile</a>
+                <a href="#">Avatar Shop</a>
+                <a href="#">Create</a>
+            </nav>
+
+            <main>
+                <h2 style="font-size: 20px; margin-bottom: 20px;">Recommended for You</h2>
+                <div class="game-grid" id="game-grid">
+                    
+                    <div class="game-card" onclick="startGame('https://raw.githack.com/hazzatazza/fun-obby-extreme/main/index.html')">
+                        <div class="thumbnail-container">
+                            <img src="https://via.placeholder.com/200/444/fff?text=Obby+Extreme" alt="Thumbnail">
+                            <div class="play-overlay"><div class="play-icon"></div></div>
+                        </div>
+                        <div class="game-info">
+                            <div class="game-title">Fun Obby Extreme</div>
+                            <div class="game-stats">👍 67% | 👤 10K+</div>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="startGame('https://raw.githack.com/hazzatazza/roblox-games/main/stealabrainrot.html')">
+                        <div class="thumbnail-container">
+                            <img src="https://via.placeholder.com/200/333/fff?text=Game+2" alt="Thumbnail">
+                            <div class="play-overlay"><div class="play-icon"></div></div>
+                        </div>
+                        <div class="game-info">
+                            <div class="game-title">Steal A Brainrot</div>
+                            <div class="game-stats">👍 85% | 👤 2.5K</div>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="startGame('https://raw.githack.com/hazzatazza/roblox-games/main/obbytowerchallenge.html')">
+                        <div class="thumbnail-container">
+                            <img src="https://via.placeholder.com/200/333/fff?text=Game+3" alt="Thumbnail">
+                            <div class="play-overlay"><div class="play-icon"></div></div>
+                        </div>
+                        <div class="game-info">
+                            <div class="game-title">Obby Tower Challenge</div>
+                            <div class="game-stats">👍 92% | 👤 50K</div>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="startGame('https://raw.githack.com/hazzatazza/roblox-games/main/growagarden.html')">
+                        <div class="thumbnail-container">
+                            <img src="https://via.placeholder.com/200/333/fff?text=Game+4" alt="Thumbnail">
+                            <div class="play-overlay"><div class="play-icon"></div></div>
+                        </div>
+                        <div class="game-info">
+                            <div class="game-title">Grow A Garden</div>
+                            <div class="game-stats">👍 78% | 👤 1.2M</div>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="startGame('https://raw.githack.com/hazzatazza/roblox-games/main/glassbridgeobby.html')">
+                        <div class="thumbnail-container">
+                            <img src="https://via.placeholder.com/200/333/fff?text=Game+5" alt="Thumbnail">
+                            <div class="play-overlay"><div class="play-icon"></div></div>
+                        </div>
+                        <div class="game-info">
+                            <div class="game-title">Glass Bridge Obby</div>
+                            <div class="game-stats">👍 88% | 👤 800</div>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="startGame('https://raw.githack.com/hazzatazza/roblox-games/main/prisonbreak1speed.html')">
+                        <div class="thumbnail-container">
+                            <img src="https://via.placeholder.com/200/333/fff?text=Game+6" alt="Thumbnail">
+                            <div class="play-overlay"><div class="play-icon"></div></div>
+                        </div>
+                        <div class="game-info">
+                            <div class="game-title">Prison Break +1 Speed</div>
+                            <div class="game-stats">👍 95% | 👤 100K</div>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="startGame('https://raw.githack.com/hazzatazza/roblox-games/main/digtocentreofearth.html')">
+                        <div class="thumbnail-container">
+                            <img src="https://via.placeholder.com/200/333/fff?text=Game+7" alt="Thumbnail">
+                            <div class="play-overlay"><div class="play-icon"></div></div>
+                        </div>
+                        <div class="game-info">
+                            <div class="game-title">Dig To The Centre Of The Earth</div>
+                            <div class="game-stats">👍 70% | 👤 4K</div>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="startGame('https://raw.githack.com/hazzatazza/roblox-games/main/1jumpperclick.html')">
+                        <div class="thumbnail-container">
+                            <img src="https://via.placeholder.com/200/333/fff?text=Game+8" alt="Thumbnail">
+                            <div class="play-overlay"><div class="play-icon"></div></div>
+                        </div>
+                        <div class="game-info">
+                            <div class="game-title">+1 Jump Per Click</div>
+                            <div class="game-stats">👍 82% | 👤 15K</div>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="startGame('https://raw.githack.com/hazzatazza/roblox-games/main/colorrush.html')">
+                        <div class="thumbnail-container">
+                            <img src="https://via.placeholder.com/200/333/fff?text=Game+9" alt="Thumbnail">
+                            <div class="play-overlay"><div class="play-icon"></div></div>
+                        </div>
+                        <div class="game-info">
+                            <div class="game-title">Color Rush</div>
+                            <div class="game-stats">👍 90% | 👤 30K</div>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="startGame('https://raw.githack.com/hazzatazza/roblox-games/main/1speedperclick.html')">
+                        <div class="thumbnail-container">
+                            <img src="https://via.placeholder.com/200/333/fff?text=Game+10" alt="Thumbnail">
+                            <div class="play-overlay"><div class="play-icon"></div></div>
+                        </div>
+                        <div class="game-info">
+                            <div class="game-title">+1 Speed Per Click</div>
+                            <div class="game-stats">👍 65% | 👤 20K</div>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="startGame('https://raw.githack.com/hazzatazza/roblox-games/main/jumpandslide.html')">
+                        <div class="thumbnail-container">
+                            <img src="https://via.placeholder.com/200/333/fff?text=Game+11" alt="Thumbnail">
+                            <div class="play-overlay"><div class="play-icon"></div></div>
+                        </div>
+                        <div class="game-info">
+                            <div class="game-title">Jump and Slide Obby</div>
+                            <div class="game-stats">👍 89% | 👤 45K</div>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="startGame('https://raw.githack.com/hazzatazza/roblox-games/main/obbyland.html')">
+                        <div class="thumbnail-container">
+                            <img src="https://via.placeholder.com/200/333/fff?text=Game+12" alt="Thumbnail">
+                            <div class="play-overlay"><div class="play-icon"></div></div>
+                        </div>
+                        <div class="game-info">
+                            <div class="game-title">Obby Land</div>
+                            <div class="game-stats">👍 94% | 👤 60K</div>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="startGame('https://raw.githack.com/hazzatazza/roblox-games/main/obbyparkour.html')">
+                        <div class="thumbnail-container">
+                            <img src="https://via.placeholder.com/200/333/fff?text=Game+13" alt="Thumbnail">
+                            <div class="play-overlay"><div class="play-icon"></div></div>
+                        </div>
+                        <div class="game-info">
+                            <div class="game-title">Obby Parkour</div>
+                            <div class="game-stats">👍 81% | 👤 7K</div>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="startGame('https://raw.githack.com/hazzatazza/roblox-games/main/plantsvsbrainrots.html')">
+                        <div class="thumbnail-container">
+                            <img src="https://via.placeholder.com/200/333/fff?text=Game+14" alt="Thumbnail">
+                            <div class="play-overlay"><div class="play-icon"></div></div>
+                        </div>
+                        <div class="game-info">
+                            <div class="game-title">Plants Vs Brainrots</div>
+                            <div class="game-stats">👍 77% | 👤 100K+</div>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="startGame('https://raw.githack.com/hazzatazza/roblox-games/main/robloxobbyparkour.html')">
+                        <div class="thumbnail-container">
+                            <img src="https://via.placeholder.com/200/333/fff?text=Game+15" alt="Thumbnail">
+                            <div class="play-overlay"><div class="play-icon"></div></div>
+                        </div>
+                        <div class="game-info">
+                            <div class="game-title">Roblox Obby Parkour</div>
+                            <div class="game-stats">👍 91% | 👤 22K</div>
+                        </div>
+                    </div>
+
+                    <div class="game-card" onclick="startGame('https://github.com/hazzatazza/roblox-games/blob/main/obbyrainbowtower.html')">
+                        <div class="thumbnail-container">
+                            <img src="https://via.placeholder.com/200/333/fff?text=Game+16" alt="Thumbnail">
+                            <div class="play-overlay"><div class="play-icon"></div></div>
+                        </div>
+                        <div class="game-info">
+                            <div class="game-title">Rainbow Obby Tower</div>
+                            <div class="game-stats">👍 84% | 👤 3K</div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div id="game-view">
+        <div class="ingame-logo-btn" onclick="toggleMenu()">
+            <div class="logo-sq"></div>
+        </div>
+        
+        <iframe id="game-frame" src=""></iframe>
+
+        <div id="esc-menu">
+            <div class="menu-box">
+                <button class="menu-btn resume-btn" onclick="toggleMenu()">Resume</button>
+                <button class="menu-btn reset-btn" onclick="restartGame()">Restart Game</button>
+                <button class="menu-btn leave-btn" onclick="leaveGame()">Leave</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const mainMenu = document.getElementById('main-menu');
+        const gameView = document.getElementById('game-view');
+        const gameFrame = document.getElementById('game-frame');
+        const escMenu = document.getElementById('esc-menu');
+        const searchInput = document.getElementById('search-input');
+        const gameCards = document.getElementsByClassName('game-card');
+
+        // --- NEW SEARCH FEATURE LOGIC ---
+        searchInput.addEventListener('input', (e) => {
+            const filter = e.target.value.toLowerCase();
+            
+            Array.from(gameCards).forEach(card => {
+                const title = card.querySelector('.game-title').innerText.toLowerCase();
+                if (title.includes(filter)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        function startGame(url) {
+            if(url === "URL_HERE") {
+                alert("Please add a real URL to this game card first!");
+                return;
+            }
+            mainMenu.style.display = 'none';
+            gameView.style.display = 'block';
+            gameFrame.src = url;
+        }
+
+        function leaveGame() {
+            gameView.style.display = 'none';
+            mainMenu.style.display = 'block';
+            gameFrame.src = ""; 
+            escMenu.style.display = 'none';
+        }
+
+        function restartGame() {
+            const currentUrl = gameFrame.src;
+            gameFrame.src = "";
+            setTimeout(() => { gameFrame.src = currentUrl; }, 10);
+            toggleMenu();
+        }
+
+        function toggleMenu() {
+            escMenu.style.display = (escMenu.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "Escape" && gameView.style.display === 'block') {
+                toggleMenu();
+            }
+        });
+    </script>
+
+</body>
+</html>
