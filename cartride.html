@@ -1,0 +1,579 @@
+<html lang="en-us"><head><style>
+        .fullscreen {
+            background: #242424;
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0px;
+            left: 0px;
+        }
+
+        #loading-overlay {
+            font-size: 20px;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #logo {
+            width: 10%;
+            max-width: 300px;
+            min-width: 120px;
+            overflow: visible;
+        }
+
+        .fill-rect {
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+        }
+
+        #gradientMover {
+            display: none;
+        }
+
+        .gradient-mover {
+            animation: moveGradient 0.4s linear;
+        }
+
+        @keyframes moveGradient {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-250%); }
+        }
+
+        .logo-fade-out {
+            animation: logoFadeOut 1s linear;
+        }
+
+        .logo-fade-out path {
+            fill: white;
+            stroke: white;
+        }
+
+        @keyframes logoFadeOut {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 0; }
+        }
+    </style></head><body><module>
+<moduleprefs title="Google.com">
+<content type="html"><title>google.com</title>
+<style>
+            html, body {
+                width: 100%;
+                height: 100%;
+                padding: 0px;
+                margin: 0px;
+            }
+            .fullscreen-canvas {
+                background: #242424;
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                top: 0px;
+                left: 0px;
+            }
+           
+        </style>
+
+
+<canvas id="canvas" class="fullscreen-canvas" width="996" height="647" style="cursor: default;"></canvas>
+<script src="https://cdn.jsdelivr.net/gh/netclassroom/dox@main/playgama-bridge.js"></script>
+<script>
+            if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                let meta = document.createElement('meta')
+                meta.name = 'viewport'
+                meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes'
+                document.getElementsByTagName('head')[0].appendChild(meta)
+            }
+
+            let canvas = document.getElementById('canvas')
+
+            const STORAGE_DATA_SEPARATOR = '{bridge_data_separator}'
+            const STORAGE_KEYS_SEPARATOR = '{bridge_keys_separator}'
+            const STORAGE_VALUES_SEPARATOR = '{bridge_values_separator}'
+            
+            // utils
+            window.unityInstance = null
+
+            function sendMessageToUnity(name, value) {
+                if (window.unityInstance !== null) {
+                    window.unityInstance.SendMessage('PlaygamaBridge', name, value)
+                }
+            }
+
+            function onUnityLoadingProgressChanged(progress) {
+                bridge.game.setLoadingProgress(progress * 100)
+            }
+            
+            window.addEventListener('pointerdown', () => {
+                window.focus()
+                canvas.focus()
+            })
+            
+// initialization
+bridge
+    .initialize()
+    .then(() => {
+        bridge.game.setLoadingProgress(0)
+        bridge.advertisement.on('banner_state_changed', state => sendMessageToUnity('OnBannerStateChanged', state))
+        bridge.advertisement.on('interstitial_state_changed', state => sendMessageToUnity('OnInterstitialStateChanged', state))
+        bridge.advertisement.on('rewarded_state_changed', state => sendMessageToUnity('OnRewardedStateChanged', state))
+        bridge.game.on('visibility_state_changed', state => sendMessageToUnity('OnVisibilityStateChanged', state))
+        bridge.platform.on('audio_state_changed', isEnabled => sendMessageToUnity('OnAudioStateChanged', isEnabled.toString()))
+        bridge.platform.on('pause_state_changed', isPaused => sendMessageToUnity('OnPauseStateChanged', isPaused.toString()))
+
+        let unityLoader = document.createElement('script')
+        unityLoader.src = 'https://cdn.jsdelivr.net/gh/netclassroom/dox@main/Build/ObbyCarts.loader.js'
+        unityLoader.onload = () => {
+
+            const wasmParts = [
+                'https://cdn.jsdelivr.net/gh/netclassroom/dox@main/Build/ObbyCarts.wasm.br.part1',
+                'https://cdn.jsdelivr.net/gh/netclassroom/dox@main/Build/ObbyCarts.wasm.br.part2',
+                'https://cdn.jsdelivr.net/gh/netclassroom/dox@main/Build/ObbyCarts.wasm.br.part3'
+            ];
+
+            async function mergeWasmParts() {
+                const responses = await Promise.all(wasmParts.map(url => fetch(url).then(r => r.arrayBuffer())));
+                const totalSize = responses.reduce((acc, cur) => acc + cur.byteLength, 0);
+                const merged = new Uint8Array(totalSize);
+
+                let offset = 0;
+                for (const part of responses) {
+                    merged.set(new Uint8Array(part), offset);
+                    offset += part.byteLength;
+                }
+
+                const blob = new Blob([merged], { type: 'application/wasm' });
+                return URL.createObjectURL(blob);
+            }
+
+            mergeWasmParts().then(mergedUrl => {
+                createUnityInstance(
+                    canvas,
+                    {
+                        dataUrl: 'https://cdn.jsdelivr.net/gh/netclassroom/dox@main/Build/ObbyCarts.data.br',
+                        frameworkUrl: 'https://cdn.jsdelivr.net/gh/netclassroom/dox@main/Build/ObbyCarts.framework.js',
+                        codeUrl: mergedUrl, 
+                        streamingAssetsUrl: 'https://cdn.jsdelivr.net/gh/netclassroom/dox@main/StreamingAssets',
+                        companyName: 'MaxDigitArt',
+                        productName: 'Cart Ride Obby',
+                        productVersion: '1.0.10',
+                    },
+                    onUnityLoadingProgressChanged)
+                    .then((unityInstance) => {
+                        window.unityInstance = unityInstance
+                        canvas.focus()
+                    })
+                    .catch((error) => {
+                        console.error(error)
+                    })
+            }).catch(err => {
+                console.error('WASM error:', err);
+            });
+        }
+
+        document.body.appendChild(unityLoader)
+    })
+    .catch(error => console.error(error))
+
+            // platform
+            window.getPlatformId = function() {
+                return bridge.platform.id
+            }
+
+            window.getPlatformLanguage = function() {
+                return bridge.platform.language
+            }
+
+            window.getPlatformPayload = function() {
+                let payload = bridge.platform.payload
+                if (typeof payload === 'string') {
+                    return payload
+                } else {
+                    return ''
+                }
+            }
+
+            window.getPlatformTld = function() {
+                let tld = bridge.platform.tld
+                if (typeof tld === 'string') {
+                    return tld
+                } else {
+                    return ''
+                }
+            }
+
+            window.getIsPlatformAudioEnabled = function() {
+                return bridge.platform.isAudioEnabled.toString()
+            }
+
+            window.getIsPlatformGetAllGamesSupported = function() {
+                return bridge.platform.isGetAllGamesSupported.toString()
+            }
+
+            window.getIsPlatformGetGameByIdSupported = function() {
+                return bridge.platform.isGetGameByIdSupported.toString()
+            }
+
+            window.sendMessageToPlatform = function(message) {
+                bridge.platform.sendMessage(message)
+            }
+
+            window.getServerTime = function() {
+                bridge.platform.getServerTime()
+                    .then(result => {
+                        sendMessageToUnity('OnGetServerTimeCompleted', result.toString())
+                    })
+                    .catch(error => {
+                        sendMessageToUnity('OnGetServerTimeCompleted', 'false')
+                    })
+            }
+
+            window.getAllGames = function() {
+                bridge.platform.getAllGames()
+                    .then(result => {
+                        sendMessageToUnity('OnGetAllGamesCompletedSuccess', JSON.stringify(result))
+                    })
+                    .catch(error => {
+                        sendMessageToUnity('OnGetAllGamesCompletedFailed')
+                    })
+            }
+
+            window.getGameById = function(options) {
+                if (options) {
+                    options = JSON.parse(options)
+                } else {
+                    options = { }
+                }
+
+                bridge.platform.getGameById(options)
+                    .then(result => {
+                        sendMessageToUnity('OnGetGameByIdCompletedSuccess', JSON.stringify(result))
+                    })
+                    .catch(error => {
+                        sendMessageToUnity('OnGetGameByIdCompletedFailed')
+                    })
+            }
+
+            // device
+            window.getDeviceType = function() {
+                return bridge.device.type
+            }
+
+
+            // player
+            window.getIsPlayerAuthorizationSupported = function() {
+                return bridge.player.isAuthorizationSupported.toString()
+            }
+
+            window.getIsPlayerAuthorized = function() {
+                return bridge.player.isAuthorized.toString()
+            }
+
+            window.getPlayerId = function() {
+                if (bridge.player.id) {
+                    return bridge.player.id.toString()
+                }
+
+                return ''
+            }
+
+            window.getPlayerName = function() {
+                if (bridge.player.name) {
+                    return bridge.player.name.toString()
+                }
+
+                return ''
+            }
+
+            window.getPlayerPhotos = function() {
+                if (bridge.player.photos.length > 0) {
+                    return JSON.stringify(bridge.player.photos)
+                }
+
+                return ''
+            }
+
+            window.authorizePlayer = function(options) {
+                if (options) {
+                    options = JSON.parse(options)
+                }
+
+                bridge.player.authorize(options)
+                    .then(() => {
+                        sendMessageToUnity('OnAuthorizeCompleted', 'true')
+                    })
+                    .catch(error => {
+                        sendMessageToUnity('OnAuthorizeCompleted', 'false')
+                    })
+            }
+
+
+            // game
+            window.getVisibilityState = function() {
+                return bridge.game.visibilityState
+            }
+
+
+            // storage
+            window.getStorageDefaultType = function() {
+                return bridge.storage.defaultType
+            }
+
+            window.getIsStorageSupported = function(storageType) {
+                return bridge.storage.isSupported(storageType).toString()
+            }
+
+            window.getIsStorageAvailable = function(storageType) {
+                return bridge.storage.isAvailable(storageType).toString()
+            }
+
+            window.getStorageData = function(key, storageType) {
+                let keys = key.split(STORAGE_KEYS_SEPARATOR)
+
+                bridge.storage.get(keys, storageType, false)
+                    .then(data => {
+                        if (keys.length > 1) {
+                            let values = []
+
+                            for (let i = 0; i < keys.length; i++) {
+                                let value = data[i]
+                                if (value) {
+                                    if (typeof value !== 'string') {
+                                        value = JSON.stringify(value)
+                                    }
+
+                                    values.push(value)
+                                } else {
+                                    values.push('')
+                                }
+                            }
+
+                            sendMessageToUnity('OnGetStorageDataSuccess', `${key}${STORAGE_DATA_SEPARATOR}${values.join(STORAGE_VALUES_SEPARATOR)}`)
+                        } else {
+                            if (data[0]) {
+                                if (typeof data[0] !== 'string') {
+                                    data = JSON.stringify(data[0])
+                                }
+                            } else {
+                                data = ''
+                            }
+
+                            sendMessageToUnity('OnGetStorageDataSuccess', `${key}${STORAGE_DATA_SEPARATOR}${data}`)
+                        }
+                    })
+                    .catch(error => {
+                        sendMessageToUnity('OnGetStorageDataFailed', key)
+                    })
+            }
+
+            window.setStorageData = function(key, value, storageType) {
+                let keys = key.split(STORAGE_KEYS_SEPARATOR)
+                let values = value.split(STORAGE_VALUES_SEPARATOR)
+
+                bridge.storage.set(keys, values, storageType)
+                    .then(() => {
+                        sendMessageToUnity('OnSetStorageDataSuccess', key)
+                    })
+                    .catch(error => {
+                        sendMessageToUnity('OnSetStorageDataFailed', key)
+                    })
+            }
+
+            window.deleteStorageData = function(key, storageType) {
+                let keys = key.split(STORAGE_KEYS_SEPARATOR)
+
+                bridge.storage.delete(keys, storageType)
+                    .then(() => {
+                        sendMessageToUnity('OnDeleteStorageDataSuccess', key)
+                    })
+                    .catch(error => {
+                        sendMessageToUnity('OnDeleteStorageDataFailed', key)
+                    })
+            }
+
+
+            // advertisement - Stubbed to remove ads but keep Unity happy
+            window.getInterstitialState = function() { return '' }
+            window.getIsBannerSupported = function() { return 'false' }
+            window.getIsInterstitialSupported = function() { return 'false' }
+            window.getMinimumDelayBetweenInterstitial = function() { return '0' }
+            window.setMinimumDelayBetweenInterstitial = function(options) { }
+            window.getIsRewardedSupported = function() { return 'false' }
+            window.getRewardedPlacement = function() { return '' }
+            window.showBanner = function(position, placement) { }
+            window.hideBanner = function() { }
+            window.showInterstitial = function(placement) { }
+            window.showRewarded = function(placement) { }
+            window.checkAdBlock = function() {
+                 sendMessageToUnity('OnCheckAdBlockCompleted', 'false')
+            }
+
+
+            // social
+            window.getIsShareSupported = function() { return bridge.social.isShareSupported.toString() }
+            window.getIsInviteFriendsSupported = function() { return bridge.social.isInviteFriendsSupported.toString() }
+            window.getIsJoinCommunitySupported = function() { return bridge.social.isJoinCommunitySupported.toString() }
+            window.getIsCreatePostSupported = function() { return bridge.social.isCreatePostSupported.toString() }
+            window.getIsAddToHomeScreenSupported = function() { return bridge.social.isAddToHomeScreenSupported.toString() }
+            window.getIsAddToFavoritesSupported = function() { return bridge.social.isAddToFavoritesSupported.toString() }
+            window.getIsRateSupported = function() { return bridge.social.isRateSupported.toString() }
+            window.getIsExternalLinksAllowed = function() { return bridge.social.isExternalLinksAllowed.toString() }
+
+            window.share = function(options) {
+                if (options) { options = JSON.parse(options) }
+                bridge.social.share(options)
+                    .then(() => sendMessageToUnity('OnShareCompleted', 'true'))
+                    .catch(() => sendMessageToUnity('OnShareCompleted', 'false'))
+            }
+
+            window.inviteFriends = function(options) {
+                if (options) { options = JSON.parse(options) }
+                bridge.social.inviteFriends(options)
+                    .then(() => sendMessageToUnity('OnInviteFriendsCompleted', 'true'))
+                    .catch(() => sendMessageToUnity('OnInviteFriendsCompleted', 'false'))
+            }
+
+            window.joinCommunity = function(options) {
+                if (options) { options = JSON.parse(options) }
+                bridge.social.joinCommunity(options)
+                    .then(() => sendMessageToUnity('OnJoinCommunityCompleted', 'true'))
+                    .catch(() => sendMessageToUnity('OnJoinCommunityCompleted', 'false'))
+            }
+
+            window.createPost = function(options) {
+                if (options) { options = JSON.parse(options) }
+                bridge.social.createPost(options)
+                    .then(() => sendMessageToUnity('OnCreatePostCompleted', 'true'))
+                    .catch(() => sendMessageToUnity('OnCreatePostCompleted', 'false'))
+            }
+
+            window.addToHomeScreen = function() {
+                bridge.social.addToHomeScreen()
+                    .then(() => sendMessageToUnity('OnAddToHomeScreenCompleted', 'true'))
+                    .catch(() => sendMessageToUnity('OnAddToHomeScreenCompleted', 'false'))
+            }
+
+            window.addToFavorites = function() {
+                bridge.social.addToFavorites()
+                    .then(() => sendMessageToUnity('OnAddToFavoritesCompleted', 'true'))
+                    .catch(() => sendMessageToUnity('OnAddToFavoritesCompleted', 'false'))
+            }
+
+            window.rate = function() {
+                bridge.social.rate()
+                    .then(() => sendMessageToUnity('OnRateCompleted', 'true'))
+                    .catch(() => sendMessageToUnity('OnRateCompleted', 'false'))
+            }
+
+
+            // leaderboards
+            window.getLeaderboardsType = function() { return bridge.leaderboards.type }
+            window.leaderboardsSetScore = function(id, score) {
+                score = parseInt(score)
+                bridge.leaderboards.setScore(id, score)
+                    .then(() => sendMessageToUnity('OnLeaderboardsSetScoreCompleted', 'true'))
+                    .catch(() => sendMessageToUnity('OnLeaderboardsSetScoreCompleted', 'false'))
+            }
+
+            window.leaderboardsGetEntries = function(id) {
+                bridge.leaderboards.getEntries(id)
+                    .then(data => {
+                        if (data) { sendMessageToUnity('OnLeaderboardsGetEntriesCompletedSuccess', JSON.stringify(data)) } 
+                        else { sendMessageToUnity('OnLeaderboardsGetEntriesCompletedSuccess', '') }
+                    })
+                    .catch(() => sendMessageToUnity('OnLeaderboardsGetEntriesCompletedFailed', 'false'))
+            }
+
+            window.getIsPaymentsSupported = function() { return bridge.payments.isSupported.toString() }
+
+            window.paymentsPurchase = function(id) {
+                bridge.payments.purchase(id)
+                    .then(data => {
+                        if (data) {
+                            if (typeof data !== 'string') { data = JSON.stringify(data) }
+                            sendMessageToUnity('OnPaymentsPurchaseCompleted', data)
+                        } else { sendMessageToUnity('OnPaymentsPurchaseCompleted', '') }
+                    })
+                    .catch(() => sendMessageToUnity('OnPaymentsPurchaseFailed', ''))
+            }
+
+            window.paymentsConsumePurchase = function(id) {
+                bridge.payments.consumePurchase(id)
+                    .then(data => {
+                        if (data) {
+                            if (typeof data !== 'string') { data = JSON.stringify(data) }
+                            sendMessageToUnity('OnPaymentsConsumePurchaseCompleted', data)
+                        } else { sendMessageToUnity('OnPaymentsConsumePurchaseCompleted', '') }
+                    })
+                    .catch(() => sendMessageToUnity('OnPaymentsConsumePurchaseFailed', ''))
+            }
+
+            window.paymentsGetCatalog = function() {
+                bridge.payments.getCatalog()
+                    .then(data => {
+                        if (data) {
+                            if (typeof data !== 'string') { data = JSON.stringify(data) }
+                            sendMessageToUnity('OnPaymentsGetCatalogCompletedSuccess', data)
+                        } else { sendMessageToUnity('OnPaymentsGetCatalogCompletedSuccess', '') }
+                    })
+                    .catch(() => sendMessageToUnity('OnPaymentsGetCatalogCompletedFailed', ''))
+            }
+
+            window.paymentsGetPurchases = function() {
+                bridge.payments.getPurchases()
+                    .then(data => {
+                        if (data) {
+                            if (typeof data !== 'string') { data = JSON.stringify(data) }
+                            sendMessageToUnity('OnPaymentsGetPurchasesCompletedSuccess', data)
+                        } else { sendMessageToUnity('OnPaymentsGetPurchasesCompletedSuccess', '') }
+                    })
+                    .catch(() => sendMessageToUnity('OnPaymentsGetPurchasesCompletedFailed', ''))
+            }
+
+            window.getIsRemoteConfigSupported = function() { return bridge.remoteConfig.isSupported.toString() }
+
+            window.remoteConfigGet = function(options) {
+                if (options) { options = JSON.parse(options) }
+                bridge.remoteConfig.get(options)
+                    .then(data => {
+                        if (typeof data !== 'string') { data = JSON.stringify(data) }
+                        sendMessageToUnity('OnRemoteConfigGetSuccess', data)
+                    })
+                    .catch(() => sendMessageToUnity('OnRemoteConfigGetFailed', ''))
+            }
+
+            window.getIsAchievementsSupported = function() { return bridge.achievements.isSupported.toString() }
+            window.getIsGetAchievementsListSupported = function() { return bridge.achievements.isGetListSupported.toString() }
+            window.getIsAchievementsNativePopupSupported = function() { return bridge.achievements.isNativePopupSupported.toString() }
+
+            window.achievementsUnlock = function(options) {
+                if (options) { options = JSON.parse(options) }
+                bridge.achievements.unlock(options)
+                    .then(() => sendMessageToUnity('OnAchievementsUnlockCompleted', 'true'))
+                    .catch(() => sendMessageToUnity('OnAchievementsUnlockCompleted', 'false'))
+            }
+
+            window.achievementsShowNativePopup = function(options) {
+                if (options) { options = JSON.parse(options) }
+                bridge.achievements.showNativePopup(options)
+                    .then(() => sendMessageToUnity('OnAchievementsShowNativePopupCompleted', 'true'))
+                    .catch(() => sendMessageToUnity('OnAchievementsShowNativePopupCompleted', 'false'))
+            }
+
+            window.achievementsGetList = function(options) {
+                if (options) { options = JSON.parse(options) }
+                bridge.achievements.getList(options)
+                    .then(data => {
+                        if (data) {
+                            if (typeof data !== 'string') { data = JSON.stringify(data) }
+                            sendMessageToUnity('OnAchievementsGetListCompletedSuccess', data)
+                        } else { sendMessageToUnity('OnAchievementsGetListCompletedSuccess', '') }
+                    })
+                    .catch(() => sendMessageToUnity('OnAchievementsGetListCompletedFailed', 'false'))
+            }
+        </script>
+]]&gt;</content>
+</moduleprefs></module><script src="https://cdn.jsdelivr.net/gh/netclassroom/dox@main/Build/ObbyCarts.loader.js"></script><script src="https://cdn.jsdelivr.net/gh/netclassroom/dox@main/Build/ObbyCarts.framework.js"></script></body></html>
