@@ -3,507 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Joeblox</title>
+    <title>JOEBLOX | Premium Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #1b1d1e;
-            --nav-color: #232527;
-            --top-bar: #232527;
-            --card-bg: #2b2d2f;
+            --bg-dark: #090a0b;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent: #3d8bff;
+            --accent-glow: rgba(61, 139, 255, 0.3);
             --text-main: #ffffff;
-            --text-secondary: #bdbebe;
-            --search-bg: #111213;
+            --text-dim: #8a8f98;
         }
 
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        
         body {
             margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: var(--bg-color);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-dark);
             color: var(--text-main);
+            display: flex;
             overflow-x: hidden;
         }
 
-        /* --- MAIN MENU STYLES --- */
-        header {
-            height: 40px;
-            background-color: var(--top-bar);
+        /* --- MODERN SIDEBAR --- */
+        nav {
+            width: 260px;
+            height: 100vh;
+            background: linear-gradient(180deg, #111418 0%, #090a0b 100%);
+            padding: 40px 20px;
+            position: fixed;
+            border-right: 1px solid var(--glass-border);
+            z-index: 100;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 28px;
+            margin-bottom: 50px;
+            background: linear-gradient(90deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1.5px;
+            padding-left: 10px;
+        }
+
+        .nav-group { margin-bottom: 30px; }
+        .nav-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; margin: 0 0 15px 15px; }
+
+        .nav-link {
+            padding: 14px 20px;
+            border-radius: 14px;
+            text-decoration: none;
+            color: var(--text-dim);
+            font-weight: 600;
             display: flex;
             align-items: center;
-            padding: 0 20px;
-            position: fixed;
-            top: 0;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .nav-link:hover { background: var(--glass); color: #fff; }
+        .nav-link.active {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 10px 20px var(--accent-glow);
+        }
+
+        /* --- CONTENT AREA --- */
+        main {
+            margin-left: 260px;
+            flex-grow: 1;
+            padding: 40px 60px;
+            max-width: 1600px;
+        }
+
+        .featured-banner {
             width: 100%;
-            z-index: 10;
-            border-bottom: 1px solid #333;
+            height: 300px;
+            background: linear-gradient(45deg, #1a1d23, #0d0f12);
+            border-radius: 24px;
+            margin-bottom: 50px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            padding: 50px;
+            border: 1px solid var(--glass-border);
         }
 
-        .search-container { flex-grow: 1; max-width: 600px; margin: 0 50px; }
-        .search-container input {
-            width: 100%; background-color: var(--search-bg); border: 1px solid #444;
-            border-radius: 4px; padding: 5px 10px; color: white; outline: none;
+        .banner-content { position: relative; z-index: 2; max-width: 500px; }
+        .banner-tag { color: var(--accent); font-weight: 800; font-size: 12px; letter-spacing: 2px; }
+        .banner-title { font-size: 42px; font-weight: 800; margin: 10px 0; }
+
+        .search-container { position: relative; margin-bottom: 40px; }
+        .search-bar {
+            width: 100%;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            padding: 18px 25px;
+            border-radius: 18px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+        }
+        .search-bar:focus { border-color: var(--accent); background: rgba(255,255,255,0.05); }
+
+        /* --- GAME TILES --- */
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 30px; }
+
+        .card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
         }
 
-        .wrapper { display: flex; padding-top: 40px; }
-
-        nav {
-            width: 180px; background-color: var(--nav-color);
-            height: calc(100vh - 40px); padding: 20px 10px; position: fixed;
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
         }
 
-        nav a {
-            display: block; color: var(--text-main); text-decoration: none;
-            padding: 10px; border-radius: 5px; margin-bottom: 5px; font-size: 14px;
-        }
-
-        main { margin-left: 200px; padding: 30px; width: calc(100% - 240px); }
-
-        .game-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
-            gap: 20px; 
-            padding-bottom: 50px;
-        }
-
-        .game-card { text-decoration: none; color: white; cursor: pointer; transition: transform 0.1s; }
-        .game-card:active { transform: scale(0.95); }
-
-        .thumbnail-container {
-            width: 100%; aspect-ratio: 1 / 1; background-color: var(--card-bg);
-            border-radius: 12px; overflow: hidden; position: relative; border: 1px solid #393b3d;
-        }
-
-        .thumbnail-container img { width: 100%; height: 100%; object-fit: cover; }
-
+        .card-img { width: 100%; aspect-ratio: 1; position: relative; }
+        .card-img img { width: 100%; height: 100%; object-fit: cover; }
+        
         .play-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.3); display: flex; justify-content: center;
-            align-items: center; opacity: 0; transition: opacity 0.2s;
-        }
-
-        .play-icon {
-            width: 0; height: 0; border-top: 20px solid transparent;
-            border-bottom: 20px solid transparent; border-left: 30px solid white; margin-left: 10px;
-        }
-
-        .game-card:hover .play-overlay { opacity: 1; }
-        .game-card:hover img { filter: brightness(0.7); }
-
-        .game-title { font-weight: bold; margin-top: 8px; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .game-stats { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
-
-        /* --- IN-GAME VIEW --- */
-        #game-view {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: black; z-index: 1000;
-        }
-
-        .ingame-logo-btn {
-            position: absolute; top: 10px; left: 10px;
-            width: 35px; height: 35px; background: rgba(0,0,0,0.6);
-            border-radius: 5px; cursor: pointer;
+            position: absolute; inset: 0; background: rgba(0,0,0,0.5);
             display: flex; align-items: center; justify-content: center;
-            z-index: 1100; border: 1px solid rgba(255,255,255,0.2);
+            opacity: 0; backdrop-filter: blur(4px);
         }
+        .card:hover .play-overlay { opacity: 1; }
 
-        .logo-sq {
-            width: 18px; height: 18px; background: white;
-            transform: rotate(-15deg); position: relative;
+        .play-btn-circle {
+            width: 60px; height: 60px; background: #fff; color: #000;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 24px; transform: scale(0.8);
         }
+        .card:hover .play-btn-circle { transform: scale(1); }
 
-        .logo-sq::after {
-            content: ''; position: absolute; width: 6px; height: 6px;
-            background: #222; top: 6px; left: 6px;
+        .card-info { padding: 18px; }
+        .card-title { font-weight: 700; font-size: 16px; margin-bottom: 6px; }
+        .card-meta { font-size: 13px; color: var(--text-dim); font-weight: 600; }
+
+        /* --- FULLSCREEN PLAYER --- */
+        #player { display: none; position: fixed; inset: 0; background: #000; z-index: 1000; }
+        .esc-trigger {
+            position: absolute; top: 20px; left: 20px; width: 45px; height: 45px;
+            background: rgba(0,0,0,0.8); border: 1px solid var(--glass-border);
+            border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 1001;
         }
-
         #esc-menu {
-            display: none; position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%; background: rgba(0,0,0,0.7);
-            z-index: 1200; justify-content: center; align-items: center;
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(10px);
         }
-
-        .menu-box {
-            background: #2b2d2f; width: 300px; padding: 30px;
-            border-radius: 10px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .menu-btn {
-            display: block; width: 100%; padding: 15px; margin: 10px 0;
-            border: none; border-radius: 8px; font-size: 16px;
-            font-weight: bold; cursor: pointer; color: white;
-        }
-
-        .reset-btn { background: #555; }
-        .leave-btn { background: #f53d3d; }
-        .resume-btn { background: #00b06f; }
-
-        iframe { width: 100%; height: 100%; border: none; }
+        .menu-box { background: #111418; padding: 40px; border-radius: 30px; border: 1px solid var(--glass-border); width: 350px; text-align: center; }
+        .m-button { width: 100%; padding: 16px; border-radius: 15px; border: none; font-weight: 700; margin: 10px 0; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="main-menu">
-        <header>
-            <div style="font-weight: bold; font-size: 18px; letter-spacing: 1px;">JOEBLOX</div>
-            <div class="search-container">
-                <input type="text" id="search-input" placeholder="Search experiences...">
-            </div>
-        </header>
-
-        <div class="wrapper">
-            <nav>
-                <a href="#" style="background: rgba(255,255,255,0.1)">Home</a>
-                <a href="#">Profile</a>
-                <a href="#">Avatar Shop</a>
-                <a href="#">Create</a>
-            </nav>
-
-            <main>
-                <h2 style="font-size: 20px; margin-bottom: 20px;">Recommended for You</h2>
-                <div class="game-grid" id="game-grid">
-                    
-                    <div class="game-card" onclick="startGame('funobbyextreme/fun-obby-extreme-main/index.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/444/fff?text=Obby+Extreme" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Fun Obby Extreme</div>
-                            <div class="game-stats">👍 67% | 👤 10K+</div>
-                        </div>
-                    </div>
-
-                    <div class="game-card" onclick="startGame('stealabrainrot.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+2" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Steal A Brainrot</div>
-                            <div class="game-stats">👍 85% | 👤 2.5K</div>
-                        </div>
-                    </div>
-
-                    <div class="game-card" onclick="startGame('obbytowerchallenge.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+3" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Obby Tower Challenge</div>
-                            <div class="game-stats">👍 92% | 👤 50K</div>
-                        </div>
-                    </div>
-
-                    <div class="game-card" onclick="startGame('growagarden.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+4" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Grow A Garden</div>
-                            <div class="game-stats">👍 78% | 👤 1.2M</div>
-                        </div>
-                    </div>
-
-                    <div class="game-card" onclick="startGame('glassbridgeobby.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+5" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Glass Bridge Obby</div>
-                            <div class="game-stats">👍 88% | 👤 800</div>
-                        </div>
-                    </div>
-
-                    <div class="game-card" onclick="startGame('prisonbreak1speed.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+6" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Prison Break +1 Speed</div>
-                            <div class="game-stats">👍 95% | 👤 100K</div>
-                        </div>
-                    </div>
-
-                    <div class="game-card" onclick="startGame('digtocentreofearth.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+7" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Dig To The Centre Of The Earth</div>
-                            <div class="game-stats">👍 70% | 👤 4K</div>
-                        </div>
-                    </div>
-
-                    <div class="game-card" onclick="startGame('1jumpperclick.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+8" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">+1 Jump Per Click</div>
-                            <div class="game-stats">👍 82% | 👤 15K</div>
-                        </div>
-                    </div>
-
-                    <div class="game-card" onclick="startGame('colorrush.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+9" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Color Rush</div>
-                            <div class="game-stats">👍 90% | 👤 30K</div>
-                        </div>
-                    </div>
-
-                    <div class="game-card" onclick="startGame('1speedperclick.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+10" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">+1 Speed Per Click</div>
-                            <div class="game-stats">👍 65% | 👤 20K</div>
-                        </div>
-                    </div>
-
-                    <div class="game-card" onclick="startGame('jumpandslide.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+11" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Jump and Slide Obby</div>
-                            <div class="game-stats">👍 89% | 👤 45K</div>
-                        </div>
-                    </div>
-
-                    <div class="game-card" onclick="startGame('obbyland.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+12" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Obby Land</div>
-                            <div class="game-stats">👍 94% | 👤 60K</div>
-                        </div>
-                    </div>
-
-                    <div class="game-card" onclick="startGame('obbyparkour.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+13" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Obby Parkour</div>
-                            <div class="game-stats">👍 81% | 👤 7K</div>
-                        </div>
-                    </div>
-
-                    <div class="game-card" onclick="startGame('plantsvsbrainrots.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+14" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Plants Vs Brainrots</div>
-                            <div class="game-stats">👍 77% | 👤 100K+</div>
-                        </div>
-                    </div>
-
-                    <div class="game-card" onclick="startGame('robloxobbyparkour.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+15" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Roblox Obby Parkour</div>
-                            <div class="game-stats">👍 91% | 👤 22K</div>
-                        </div>
-                    </div>
-
-                    <div class="game-card" onclick="startGame('obbyrainbowtower.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+16" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Rainbow Obby Tower</div>
-                            <div class="game-stats">👍 84% | 👤 3K</div>
-                        </div>
-                    </div>
-
-                  <div class="game-card" onclick="startGame('bladeball.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+16" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Blade Ball</div>
-                            <div class="game-stats">👍 84% | 👤 65K</div>
-                        </div>
-                    </div>
-
-                  <div class="game-card" onclick="startGame('barryprisonescape.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+16" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Barry Prison Escape</div>
-                            <div class="game-stats">👍 74% | 👤 34K</div>
-                        </div>
-                    </div>
-
-                  <div class="game-card" onclick="startGame('squidgame.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+16" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Squid Game</div>
-                            <div class="game-stats">👍 81% | 👤 56K</div>
-                        </div>
-                    </div>
-
-                  <div class="game-card" onclick="startGame('cartride.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+16" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Cart Ride</div>
-                            <div class="game-stats">👍 87% | 👤 99K</div>
-                        </div>
-                    </div>
-
-                  <div class="game-card" onclick="startGame('obbybike.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+16" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Obby Bike</div>
-                            <div class="game-stats">👍 78% | 👤 45K</div>
-                        </div>
-                    </div>
-
-                  <div class="game-card" onclick="startGame('climbforbrainrots.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+16" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Climb For Brainrots</div>
-                            <div class="game-stats">👍 66% | 👤 21K</div>
-                        </div>
-                    </div>
-
-                  <div class="game-card" onclick="startGame('ninjaobbyparkour.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+16" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Ninja Obby Parkour</div>
-                            <div class="game-stats">👍 97% | 👤 12K</div>
-                        </div>
-                    </div>
-
-                  <div class="game-card" onclick="startGame('obbyonlyup.html')">
-                        <div class="thumbnail-container">
-                            <img src="https://via.placeholder.com/200/333/fff?text=Game+16" alt="Thumbnail">
-                            <div class="play-overlay"><div class="play-icon"></div></div>
-                        </div>
-                        <div class="game-info">
-                            <div class="game-title">Obby Only Up</div>
-                            <div class="game-stats">👍 97% | 👤 12K</div>
-                        </div>
-                    </div>                    
-
-                </div>
-            </main>
-        </div>
-    </div>
-
-    <div id="game-view">
-        <div class="ingame-logo-btn" onclick="toggleMenu()">
-            <div class="logo-sq"></div>
-        </div>
+    <nav>
+        <div class="logo">JOEBLOX</div>
         
-        <iframe id="game-frame" src=""></iframe>
+        <div class="nav-group">
+            <div class="nav-label">Discover</div>
+            <div class="nav-link active" onclick="updateView('all', this)">⚡ Explore</div>
+            <div class="nav-link" onclick="updateView('trending', this)">🔥 Trending</div>
+        </div>
 
+        <div class="nav-group">
+            <div class="nav-label">Categories</div>
+            <div class="nav-link" onclick="updateView('obby', this)">🏃‍♂️ Obbies</div>
+            <div class="nav-link" onclick="updateView('brainrot', this)">🌀 Brainrot</div>
+            <div class="nav-link" onclick="updateView('clicker', this)">🖱️ Clickers</div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="featured-banner">
+            <div class="banner-content">
+                <div class="banner-tag">RECOMMENDED</div>
+                <h1 class="banner-title">Steal A Brainrot</h1>
+                <p style="color: var(--text-dim); margin-bottom: 25px;">The game that took the world by storm, now on Joeblox.</p>
+                <button class="m-button" style="background: var(--accent); color: white; width: 160px;" onclick="launch('stealabrainrot.html')">Play Now</button>
+            </div>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="gameSearch" class="search-bar" placeholder="What would you like to play?">
+        </div>
+
+        <div class="section-header">
+            <h2 id="viewTitle" style="font-weight: 800;">Experiences</h2>
+        </div>
+
+        <div class="grid" id="gameGrid"></div>
+    </main>
+
+    <div id="player">
+        <div class="esc-trigger" onclick="toggleMenu()">☰</div>
+        <iframe id="gameFrame" src="" style="width:100%; height:100%; border:none;"></iframe>
         <div id="esc-menu">
             <div class="menu-box">
-                <button class="menu-btn resume-btn" onclick="toggleMenu()">Resume</button>
-                <button class="menu-btn reset-btn" onclick="restartGame()">Restart Game</button>
-                <button class="menu-btn leave-btn" onclick="leaveGame()">Leave</button>
+                <h2 style="margin-top:0">Paused</h2>
+                <button class="m-button" style="background: var(--accent); color: white;" onclick="toggleMenu()">Resume</button>
+                <button class="m-button" style="background: #222; color: white;" onclick="restart()">Restart Experience</button>
+                <button class="m-button" style="background: #ff4757; color: white;" onclick="quit()">Quit Game</button>
             </div>
         </div>
     </div>
 
     <script>
-        const mainMenu = document.getElementById('main-menu');
-        const gameView = document.getElementById('game-view');
-        const gameFrame = document.getElementById('game-frame');
-        const escMenu = document.getElementById('esc-menu');
-        const searchInput = document.getElementById('search-input');
-        const gameCards = document.getElementsByClassName('game-card');
+        const GAMES = [
+            { name: "Fun Obby Extreme", path: "funobbyextreme/fun-obby-extreme-main/index.html", color: "444", stats: "67% Like", tag: "trending", cat: "obby" },
+            { name: "Steal A Brainrot", path: "stealabrainrot.html", color: "333", stats: "85% Like", tag: "new", cat: "brainrot" },
+            { name: "Obby Tower Challenge", path: "obbytowerchallenge.html", color: "222", stats: "92% Like", tag: "trending", cat: "obby" },
+            { name: "Grow A Garden", path: "growagarden.html", color: "111", stats: "78% Like", tag: "all", cat: "all" },
+            { name: "Glass Bridge Obby", path: "glassbridgeobby.html", color: "555", stats: "88% Like", tag: "all", cat: "obby" },
+            { name: "Prison Break +1 Speed", path: "prisonbreak1speed.html", color: "666", stats: "95% Like", tag: "trending", cat: "clicker" },
+            { name: "Dig To Center", path: "digtocentreofearth.html", color: "777", stats: "70% Like", tag: "all", cat: "all" },
+            { name: "+1 Jump Per Click", path: "1jumpperclick.html", color: "888", stats: "82% Like", tag: "all", cat: "clicker" },
+            { name: "Color Rush", path: "colorrush.html", color: "999", stats: "90% Like", tag: "all", cat: "all" },
+            { name: "+1 Speed Per Click", path: "1speedperclick.html", color: "000", stats: "65% Like", tag: "all", cat: "clicker" },
+            { name: "Jump and Slide", path: "jumpandslide.html", color: "121", stats: "89% Like", tag: "all", cat: "obby" },
+            { name: "Obby Land", path: "obbyland.html", color: "232", stats: "94% Like", tag: "all", cat: "obby" },
+            { name: "Obby Parkour", path: "obbyparkour.html", color: "343", stats: "81% Like", tag: "all", cat: "obby" },
+            { name: "Plants Vs Brainrots", path: "plantsvsbrainrots.html", color: "454", stats: "77% Like", tag: "trending", cat: "brainrot" },
+            { name: "Roblox Obby Parkour", path: "robloxobbyparkour.html", color: "565", stats: "91% Like", tag: "all", cat: "obby" },
+            { name: "Rainbow Tower", path: "obbyrainbowtower.html", color: "676", stats: "84% Like", tag: "all", cat: "obby" },
+            { name: "Blade Ball", path: "bladeball.html", color: "787", stats: "84% Like", tag: "trending", cat: "all" },
+            { name: "Barry Prison Escape", path: "barryprisonescape.html", color: "898", stats: "74% Like", tag: "all", cat: "obby" },
+            { name: "Squid Game", path: "squidgame.html", color: "909", stats: "81% Like", tag: "trending", cat: "all" },
+            { name: "Cart Ride", path: "cartride.html", color: "010", stats: "87% Like", tag: "all", cat: "all" },
+            { name: "Obby Bike", path: "obbybike.html", color: "123", stats: "78% Like", tag: "all", cat: "obby" },
+            { name: "Climb For Brainrots", path: "climbforbrainrots.html", color: "234", stats: "66% Like", tag: "all", cat: "brainrot" },
+            { name: "Ninja Parkour", path: "ninjaobbyparkour.html", color: "345", stats: "97% Like", tag: "all", cat: "obby" },
+            { name: "Obby Only Up", path: "obbyonlyup.html", color: "456", stats: "97% Like", tag: "all", cat: "obby" }
+        ];
 
-        // --- NEW SEARCH FEATURE LOGIC ---
-        searchInput.addEventListener('input', (e) => {
-            const filter = e.target.value.toLowerCase();
-            
-            Array.from(gameCards).forEach(card => {
-                const title = card.querySelector('.game-title').innerText.toLowerCase();
-                if (title.includes(filter)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
+        const grid = document.getElementById('gameGrid');
+        const search = document.getElementById('gameSearch');
+
+        function draw(filter = 'all', query = '') {
+            grid.innerHTML = '';
+            GAMES.forEach(g => {
+                const queryMatch = g.name.toLowerCase().includes(query.toLowerCase());
+                const filterMatch = filter === 'all' || g.cat === filter || g.tag === filter;
+                
+                if (queryMatch && filterMatch) {
+                    const el = document.createElement('div');
+                    el.className = 'card';
+                    el.onclick = () => launch(g.path);
+                    el.innerHTML = `
+                        <div class="card-img">
+                            <img src="https://via.placeholder.com/300/${g.color}/fff?text=${g.name[0]}">
+                            <div class="play-overlay"><div class="play-btn-circle">▶</div></div>
+                        </div>
+                        <div class="card-info">
+                            <div class="card-title">${g.name}</div>
+                            <div class="card-meta">${g.stats}</div>
+                        </div>
+                    `;
+                    grid.appendChild(el);
                 }
             });
-        });
-
-        function startGame(url) {
-            if(url === "URL_HERE") {
-                alert("Please add a real URL to this game card first!");
-                return;
-            }
-            mainMenu.style.display = 'none';
-            gameView.style.display = 'block';
-            gameFrame.src = url;
         }
 
-        function leaveGame() {
-            gameView.style.display = 'none';
-            mainMenu.style.display = 'block';
-            gameFrame.src = ""; 
-            escMenu.style.display = 'none';
+        function updateView(cat, el) {
+            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('viewTitle').innerText = el.innerText.replace(/[^a-zA-Z]/g, '');
+            draw(cat);
         }
 
-        function restartGame() {
-            const currentUrl = gameFrame.src;
-            gameFrame.src = "";
-            setTimeout(() => { gameFrame.src = currentUrl; }, 10);
-            toggleMenu();
-        }
+        search.oninput = (e) => draw('all', e.target.value);
+        function launch(p) { document.getElementById('player').style.display='block'; document.getElementById('gameFrame').src = p; }
+        function quit() { document.getElementById('player').style.display='none'; document.getElementById('gameFrame').src = ''; toggleMenu(); }
+        function toggleMenu() { const m = document.getElementById('esc-menu'); m.style.display = (m.style.display==='flex')?'none':'flex'; }
+        function restart() { const f = document.getElementById('gameFrame'); const s = f.src; f.src=''; setTimeout(()=> { f.src=s; toggleMenu(); }, 50); }
 
-        function toggleMenu() {
-            escMenu.style.display = (escMenu.style.display === 'flex') ? 'none' : 'flex';
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === "Escape" && gameView.style.display === 'block') {
-                toggleMenu();
-            }
-        });
+        draw();
     </script>
-
 </body>
 </html>
